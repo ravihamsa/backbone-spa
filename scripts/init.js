@@ -1,23 +1,50 @@
 var pageRootEl = $('.page-container');
 var currentPage ;
+var currentPageId = defaultPage;
 
+var defaultPage = 'page1';
+    
+var paramsToObject = function(params) {
+     if (!params) {
+         return {};
+     }
+     var paramsArray = _.map(params.split(';'), function(str) {
+         return str.split('=');
+     });
+     var obj = {};
+     _.each(paramsArray, function(arr) {
+         obj[arr[0]] = arr[1];
+     });
+     return obj;
+ };
+    
+    
 var Router = Backbone.Router.extend({
     routes: {
         ':pageId': 'renderPage',
-        '':'renderDefaultPage'
+        ':pageId/*params': 'renderPage',
+        '':'renderDefaultPage',
+        
     },
-    renderPage: function (pageId) {
-
+    renderPage: function (pageId, params) {
+        var paramsObject = paramsToObject(params);
+        
+        if(currentPageId === pageId && currentPage){
+            currentPage.model.set(paramsObject);
+            return;
+        }
+        
         if(currentPage){
             currentPage.remove();
         }
         pageRootEl.empty();
-
-
+        
+    
         switch (pageId) {
             case 'page1':
                 $.getScript('pages/' + pageId + ".js", function () {
                     currentPage = new Page1.View({
+                        
                     });
 
                     currentPage.render().$el.appendTo(pageRootEl);
@@ -44,7 +71,7 @@ var Router = Backbone.Router.extend({
 
     },
     renderDefaultPage: function(){
-        this.renderPage('page1');
+        this.renderPage(defaultPage);
     }
 })
 
